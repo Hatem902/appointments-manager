@@ -9,25 +9,35 @@ datasource db {
 }
 
 model Vendor {
-  id   String @id @default(cuid())
-  name String
+  id           String        @id @default(cuid())
+  name         String
+  appointments Appointment[] // one to many relationship
 }
 
 model Buyer {
-  id      String @id @default(cuid())
-  name    String
-  company String
+  id           String        @id @default(cuid())
+  name         String
+  company      String
+  appointments Appointment[] // one to many relationship
+}
+
+enum AppointmentType {
+  virtual
+  physical
 }
 
 model Appointment {
-  id        String   @id @default(cuid())
+  id        String          @id @default(cuid())
   title     String
-  type      String
+  type      AppointmentType
   location  String?
-  vendorId  String
-  buyerId   String
+  hostId    String
+  clientId  String
   startTime DateTime
   endTime   DateTime
+
+  host   Vendor @relation(fields: [hostId], references: [id])
+  client Buyer  @relation(fields: [clientId], references: [id])
 }
 
 //TODO: make type attribute array of 2 string literals ['virtual','physical'] or ENUM, and location attribute only required if type is physical.

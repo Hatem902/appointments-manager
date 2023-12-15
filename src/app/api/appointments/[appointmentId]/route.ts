@@ -3,31 +3,43 @@ import { appointmentPostSchema } from '@/lib/validations';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-export async function GET() {
+interface Params {
+  appointmentId: string;
+}
+
+export async function DELETE(
+  request: Request,
+  { params: { appointmentId } }: { params: Params }
+) {
   try {
-    const appointments = await db.appointment.findMany({});
-    return NextResponse.json(appointments);
+    await db.appointment.delete({
+      where: {
+        id: appointmentId,
+      },
+    });
+
+    return NextResponse.json({ appointmentId, deleted: true });
   } catch (error) {
-    return NextResponse.json({ error }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal server error.',
+      },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(request: Request) {
+export async function PATCH(
+  request: Request,
+  { params: { appointmentId } }: { params: Params }
+) {
   try {
     const body = await request.json();
     const appointment = appointmentPostSchema.parse(body);
-
-    const createdAppointment = await db.appointment.create({
+    const updatedAppointment = await db.appointment.update({
+      where: { id: appointmentId },
       data: {
-        title: appointment.title,
-        type: appointment.type,
-        location: appointment.location,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        /*   clientId: appointment.clientId,
-        hostId: appointment.hostId, */
-        host: { connect: { id: appointment.hostId } },
-        client: { connect: { id: appointment.clientId } },
+        ...appointment,
       },
       select: {
         id: true,
@@ -41,7 +53,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(createdAppointment);
+    return NextResponse.json(updatedAppointment);
   } catch (error) {
     return NextResponse.json(
       error instanceof z.ZodError

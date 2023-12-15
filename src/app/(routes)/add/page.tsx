@@ -28,7 +28,6 @@ import {
   useBuyersQuery,
   useVendorsQuery,
 } from '@/hooks/queries';
-import { useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Plus } from 'lucide-react';
 export default function AddAppointment() {

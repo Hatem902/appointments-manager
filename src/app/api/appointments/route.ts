@@ -24,8 +24,6 @@ export async function POST(request: Request) {
         location: appointment.location,
         startTime: appointment.startTime,
         endTime: appointment.endTime,
-        /*   clientId: appointment.clientId,
-        hostId: appointment.hostId, */
         host: { connect: { id: appointment.hostId } },
         client: { connect: { id: appointment.clientId } },
       },

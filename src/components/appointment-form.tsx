@@ -1,4 +1,4 @@
-/* TODO:Finish this component and use it for both /add, and /edit/[appointmendId] pages */
+/* TODO:Finish this component and use it for both /add, and /edit/[appointmendId] pages, to remove repition */
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -28,7 +28,6 @@ import {
   useEditAppointmentMutation,
   useVendorsQuery,
 } from '@/hooks/queries';
-import { useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Pencil, Plus } from 'lucide-react';
 import { useParams, useSearchParams } from 'next/navigation';

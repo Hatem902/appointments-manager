@@ -1,5 +1,5 @@
 'use client';
-import { appointmentPostSchema } from '@/lib/validations';
+import { appointmentPostSchema, validateTimeSchema } from '@/lib/validations';
 import { Appointment, Buyer, Vendor } from '@prisma/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
@@ -9,8 +9,9 @@ import { z } from 'zod';
 export const useAppointmentsQuery = () =>
   useQuery({
     queryKey: ['appointments'],
-    queryFn: async (): Promise<Appointment[]> =>
-      (await axios.get('/api/appointments')).data,
+    queryFn: async (): Promise<
+      (Appointment & { client: Buyer; host: Vendor })[]
+    > => (await axios.get('/api/appointments')).data,
   });
 
 export const useVendorsQuery = () =>
@@ -57,11 +58,20 @@ export const useEditAppointmentMutation = () => {
 export const useDeleteAppointmentMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (appointmentId: String) => {
-      await axios.delete(`/api/appointments/${appointmentId}`);
-    },
+    mutationFn: async (appointmentId: String) =>
+      await axios.delete(`/api/appointments/${appointmentId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
+  });
+};
+
+export const useValidateTimeMutation = () => {
+  return useMutation({
+    mutationKey: ['time-is-valid'],
+    mutationFn: async (
+      appointmentSettings: z.infer<typeof validateTimeSchema>
+    ) => (await axios.post('/api/time-validation/', appointmentSettings)).data,
+    onSuccess: (data) => data,
   });
 };

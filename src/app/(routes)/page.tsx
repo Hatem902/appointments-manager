@@ -9,17 +9,16 @@ export default function Appointments() {
   const { data: appointments, isLoading: appointmentsAreLoading } =
     useAppointmentsQuery();
   return (
-    <main className='w-full max-w-[62rem] flex flex-col space-y-10 items-center justify-center '>
+    <main className='w-full max-w-[76rem] flex flex-col space-y-6 items-center justify-center '>
       <Link href='/add'>
         <Button>
           <Plus className='mr-2 h-4 w-4' /> Add Appointment
         </Button>
       </Link>
       {appointmentsAreLoading ? (
-        <Loader2 className='animate-spin h-10 w-10 text-blue-500 align-middle' />
+        <Loader2 className='animate-spin h-10 w-10 text-blue-500 align' />
       ) : (
         <div className='grid xl:grid-cols-3 lg:grid-cols-2 grid-cols-1 gap-4  '>
-          {/* TODO: Handle loading */}
           {appointments?.map((appointment) => (
             <AppointmentCard {...appointment} key={appointment.id} />
           ))}

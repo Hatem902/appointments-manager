@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
-import { ReactQueryProvider } from '@/client-providers';
+import { ReactQueryProvider, ThemeProvider } from '@/client-providers';
 import { cn } from '@/lib/utils';
+import { ModeToggle } from '@/components/mode-toggle';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,14 +19,17 @@ export default function RootLayout({
 }) {
   return (
     <ReactQueryProvider>
-      <html lang='en'>
+      <html lang='en' suppressHydrationWarning>
         <body
           className={cn(
-            'flex flex-col w-full h-full items-center py-16 px-4 no-scrollbar ',
+            'flex flex-col w-full h-full items-center py-12 px-4 no-scrollbar antialiased bg-background',
             inter.className
           )}
         >
-          {children}
+          <ThemeProvider attribute='class' defaultTheme='light'>
+            <ModeToggle />
+            {children}
+          </ThemeProvider>
         </body>
       </html>
     </ReactQueryProvider>

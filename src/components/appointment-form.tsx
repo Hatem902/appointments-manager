@@ -26,6 +26,7 @@ import { AppointmentType } from '@prisma/client';
 import {
   useBuyersQuery,
   useEditAppointmentMutation,
+  useValidateTimeMutation,
   useVendorsQuery,
 } from '@/hooks/queries';
 import Link from 'next/link';
@@ -35,24 +36,26 @@ import { useParams, useSearchParams } from 'next/navigation';
 export default function AppointmentForm({ mutation }: { mutation: Mutation }) {
   const { appointmentId } = useParams();
   const searchParams = useSearchParams();
-
   const { data: hosts } = useVendorsQuery();
   const { data: clients } = useBuyersQuery();
   const { mutate: editAppointment, isPending } = useEditAppointmentMutation();
-  const startTimeString = searchParams.get('startTime');
-  const endTimeString = searchParams.get('endTime');
+  const { mutateAsync: validateTime, isPending: isTimeValidating } =
+    useValidateTimeMutation();
   const form = useForm<z.infer<typeof appointmentPostSchema>>({
     resolver: zodResolver(appointmentPostSchema),
     defaultValues: {
       title: searchParams.get('title') as string,
-      type: AppointmentType.virtual,
+      type: searchParams.get('type') as AppointmentType,
       location: searchParams.get('location') as string,
       clientId: searchParams.get('clientId') as string,
       hostId: searchParams.get('hostId') as string,
-      /* TODO: assign default values for start date and end date */
+      /* @ts-ignore */
+      startTime: searchParams.get('startTime').substring(0, 19),
+      /* @ts-ignore */
+      endTime: searchParams.get('endTime').substring(0, 19),
     },
   });
-  function onSubmit(data: z.infer<typeof appointmentPostSchema>) {
+  async function onSubmit(data: z.infer<typeof appointmentPostSchema>) {
     let valid = true;
     if (data.type === AppointmentType.physical && !data.location) {
       form.setError('location', {
@@ -73,6 +76,25 @@ export default function AppointmentForm({ mutation }: { mutation: Mutation }) {
       valid = false;
     }
     if (!valid) return;
+
+    const timeIsValid = await validateTime({
+      id: appointmentId as string,
+      clientId: data.clientId,
+      hostId: data.hostId,
+      startTime: new Date(data.startTime),
+      endTime: new Date(data.endTime),
+    });
+    if (!timeIsValid) {
+      form.setError('startTime', {
+        type: 'custom',
+        message: 'Time slot is not available for the selected host and client.',
+      });
+      form.setError('endTime', {
+        type: 'custom',
+        message: 'Time slot is not available for the selected host and client.',
+      });
+      return;
+    }
     editAppointment({
       ...data,
       startTime: new Date(data.startTime),
@@ -158,7 +180,6 @@ export default function AppointmentForm({ mutation }: { mutation: Mutation }) {
               )
             }
           />
-          {/* TODO: Make client and host comboxes instead of select inputs. */}
           <FormField
             control={form.control}
             name='hostId'
@@ -205,7 +226,7 @@ export default function AppointmentForm({ mutation }: { mutation: Mutation }) {
                   <SelectContent>
                     {clients?.map((client) => (
                       <SelectItem value={client.id} key={client.id}>
-                        {client.name}
+                        {client.name} from {client.company}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -215,7 +236,6 @@ export default function AppointmentForm({ mutation }: { mutation: Mutation }) {
               </FormItem>
             )}
           />
-          {/* TODO: style date input */}
           <FormField
             control={form.control}
             name='startTime'
@@ -246,8 +266,7 @@ export default function AppointmentForm({ mutation }: { mutation: Mutation }) {
           />
           <div className='flex space-x-2 justify-end pt-6'>
             <Link href='/'>
-              <Button variant='outline'>
-                {' '}
+              <Button variant='outline' type='button'>
                 <ArrowLeft className='mr-2 h-4 w-4' />
                 Cancel
               </Button>

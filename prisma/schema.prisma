@@ -39,5 +39,3 @@ model Appointment {
   host   Vendor @relation(fields: [hostId], references: [id])
   client Buyer  @relation(fields: [clientId], references: [id])
 }
-
-//TODO: make type attribute array of 2 string literals ['virtual','physical'] or ENUM, and location attribute only required if type is physical.

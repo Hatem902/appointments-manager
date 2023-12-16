@@ -5,7 +5,18 @@ import { z } from 'zod';
 
 export async function GET() {
   try {
-    const appointments = await db.appointment.findMany({});
+    const appointments = await db.appointment.findMany({
+      select: {
+        client: true,
+        host: true,
+        id: true,
+        location: true,
+        startTime: true,
+        endTime: true,
+        title: true,
+        type: true,
+      },
+    });
     return NextResponse.json(appointments);
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });

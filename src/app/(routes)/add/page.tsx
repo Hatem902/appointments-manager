@@ -26,6 +26,7 @@ import { AppointmentType } from '@prisma/client';
 import {
   useAddAppointmentMutation,
   useBuyersQuery,
+  useValidateTimeMutation,
   useVendorsQuery,
 } from '@/hooks/queries';
 import Link from 'next/link';
@@ -34,10 +35,21 @@ export default function AddAppointment() {
   const { data: hosts } = useVendorsQuery();
   const { data: clients } = useBuyersQuery();
   const { mutate: addAppointment, isPending } = useAddAppointmentMutation();
+  const { mutateAsync: validateTime, isPending: isTimeValidating } =
+    useValidateTimeMutation();
   const form = useForm<z.infer<typeof appointmentPostSchema>>({
     resolver: zodResolver(appointmentPostSchema),
+    defaultValues: {
+      title: '',
+      type: undefined,
+      location: '',
+      clientId: undefined,
+      hostId: undefined,
+      startTime: new Date(''),
+      endTime: new Date(''),
+    },
   });
-  function onSubmit(data: z.infer<typeof appointmentPostSchema>) {
+  async function onSubmit(data: z.infer<typeof appointmentPostSchema>) {
     let valid = true;
     if (data.type === AppointmentType.physical && !data.location) {
       form.setError('location', {
@@ -58,6 +70,25 @@ export default function AddAppointment() {
       valid = false;
     }
     if (!valid) return;
+
+    const timeIsValid = await validateTime({
+      clientId: data.clientId,
+      hostId: data.hostId,
+      startTime: new Date(data.startTime),
+      endTime: new Date(data.endTime),
+    });
+    if (!timeIsValid) {
+      form.setError('startTime', {
+        type: 'custom',
+        message: 'Time slot is not available for the selected host and client.',
+      });
+      form.setError('endTime', {
+        type: 'custom',
+        message: 'Time slot is not available for the selected host and client.',
+      });
+      return;
+    }
+
     addAppointment({
       ...data,
       startTime: new Date(data.startTime),
@@ -139,7 +170,7 @@ export default function AddAppointment() {
               )
             }
           />
-          {/* TODO: Make client and host comboxes instead of select inputs. */}
+
           <FormField
             control={form.control}
             name='hostId'
@@ -186,7 +217,7 @@ export default function AddAppointment() {
                   <SelectContent>
                     {clients?.map((client) => (
                       <SelectItem value={client.id} key={client.id}>
-                        {client.name}
+                        {client.name} from {client.company}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -196,7 +227,7 @@ export default function AddAppointment() {
               </FormItem>
             )}
           />
-          {/* TODO: style date input */}
+
           <FormField
             control={form.control}
             name='startTime'
@@ -227,14 +258,13 @@ export default function AddAppointment() {
           />
           <div className='flex space-x-2 justify-end pt-6'>
             <Link href='/'>
-              <Button variant='outline'>
-                {' '}
+              <Button variant='outline' type='button'>
                 <ArrowLeft className='mr-2 h-4 w-4' />
                 Cancel
               </Button>
             </Link>
-            <Button disabled={isPending} type='submit'>
-              {isPending ? (
+            <Button disabled={isPending || isTimeValidating} type='submit'>
+              {isPending || isTimeValidating ? (
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               ) : (
                 <Plus className='mr-2.5 h-4 w-4' />

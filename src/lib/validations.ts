@@ -26,3 +26,11 @@ export const appointmentPostSchema = z.object({
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
+
+export const validateTimeSchema = z.object({
+  id: z.string().optional(),
+  hostId: z.string(),
+  clientId: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});

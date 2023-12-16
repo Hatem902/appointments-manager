@@ -1,8 +1,8 @@
 import { CardTitle, CardHeader, CardContent, Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Appointment, AppointmentType } from '@prisma/client';
+import { Appointment, AppointmentType, Buyer, Vendor } from '@prisma/client';
 import { cn, formatDate, formatTime } from '@/lib/utils';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, PersonStandingIcon, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,13 +19,15 @@ import { useDeleteAppointmentMutation } from '@/hooks/queries';
 import Link from 'next/link';
 import { stringify } from 'querystring';
 
-const AppointmentCard: FC<Appointment> = (appointment) => {
+const AppointmentCard: FC<Appointment & { client: Buyer; host: Vendor }> = (
+  appointment
+) => {
   const { mutate: deleteAppointment, isPending } =
     useDeleteAppointmentMutation();
   return (
     <Card
       className={cn(
-        'relative p-3 w-80 transition-opacity opacity-100 ',
+        'relative p-3 w-96 transition-opacity opacity-100 ',
         isPending && 'opacity-20'
       )}
     >
@@ -33,7 +35,11 @@ const AppointmentCard: FC<Appointment> = (appointment) => {
         href={{
           pathname: `/edit/${appointment.id}`,
           query: stringify({
-            ...appointment,
+            title: appointment.title,
+            location: appointment.location,
+            clientId: appointment.client.id,
+            hostId: appointment.host.id,
+            type: appointment.type,
             startTime:
               appointment.startTime instanceof Date
                 ? appointment.startTime.toISOString()
@@ -75,14 +81,29 @@ const AppointmentCard: FC<Appointment> = (appointment) => {
         <CardTitle className='text-lg font-bold'>{appointment.title}</CardTitle>
       </CardHeader>
       <CardContent className='text-sm'>
-        <div className='flex flex-col space-y-2'>
+        <div className='flex flex-col space-y-2.5'>
+          <div className='flex items-center space-x-2'>
+            <PersonStandingIcon className='w-4 h-4 text-gray-600' />
+            <span>Host: {appointment.host.name}</span>
+          </div>
+          <div className='flex items-center space-x-2'>
+            <PersonStandingIcon className='w-4 h-4 text-gray-600' />
+            <span>
+              Client: {appointment.client.name} from{' '}
+              {appointment.client.company}
+            </span>
+          </div>
           <div className='flex items-center space-x-2'>
             <CalendarIcon className='w-4 h-4 text-gray-600' />
-            <span>{formatDate(appointment.startTime)}</span>
+            <span>Start Date: {formatDate(appointment.startTime)}</span>
           </div>
           <div className='flex items-center space-x-2'>
             <ClockIcon className='w-4 h-4 text-gray-600' />
             <span>Start Time: {formatTime(appointment.startTime)}</span>
+          </div>
+          <div className='flex items-center space-x-2'>
+            <CalendarIcon className='w-4 h-4 text-gray-600' />
+            <span>End Date: {formatDate(appointment.endTime)}</span>
           </div>
           <div className='flex items-center space-x-2'>
             <ClockIcon className='w-4 h-4 text-gray-600' />
@@ -97,7 +118,7 @@ const AppointmentCard: FC<Appointment> = (appointment) => {
             </span>
           </div>
         </div>
-        <div className='mt-6'>
+        <div className='mt-7  '>
           <Button variant='outline'>
             {appointment.type === AppointmentType.virtual
               ? 'Join Meeting'

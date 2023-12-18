@@ -8,6 +8,7 @@ import Link from 'next/link';
 export default function Appointments() {
   const { data: appointments, isLoading: appointmentsAreLoading } =
     useAppointmentsQuery();
+
   return (
     <main className='w-full max-w-[76rem] flex flex-col space-y-6 items-center justify-center '>
       <Link href='/add'>

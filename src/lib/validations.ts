@@ -11,7 +11,7 @@ export const appointmentPostSchema = z.object({
     .string({
       required_error: 'Please enter the title of your appointment.',
     })
-    .min(1, { message: 'Please select the type of your appointment.' }),
+    .min(1, { message: 'Please select the title of your appointment.' }),
   type: z.enum(appointmentTypes, {
     required_error: 'Please select the type of your appointment.',
   }),
